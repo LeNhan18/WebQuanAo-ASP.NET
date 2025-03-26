@@ -1,0 +1,15 @@
+@model IEnumerable<Productt.Models.Category>
+
+<div class="category-filter">
+    <a asp-controller="Product" asp-action="Index" 
+       class="btn @(string.IsNullOrEmpty(ViewBag.CurrentCategoryId) ? "btn-primary" : "btn-outline-primary")">
+        Tất cả
+    </a>
+    @foreach (var category in Model)
+    {
+        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@category.Id" 
+           class="btn @(ViewBag.CurrentCategoryId == category.Id.ToString() ? "btn-primary" : "btn-outline-primary")">
+            @category.Name
+        </a>
+    }
+</div> 

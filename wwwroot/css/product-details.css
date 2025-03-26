@@ -1,0 +1,33 @@
+/* Product Details Styles */
+.product-details-image {
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.product-details-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.product-details-price {
+    font-size: 1.5rem;
+    color: #ff4757;
+    margin-bottom: 1rem;
+}
+
+.product-details-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.product-details-category {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    color: #666;
+    margin-bottom: 1rem;
+} 

@@ -1,0 +1,131 @@
+@model Productt.Models.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <img src="@(string.IsNullOrEmpty(Model.imageUrl) ? "/images/no-image.jpg" : Model.imageUrl)" 
+                     class="card-img-top" 
+                     alt="@Model.Name"
+                     style="max-height: 400px; object-fit: cover;">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h2>@Model.Name</h2>
+            <div class="mb-3">
+                <span class="badge bg-primary">@Model.Category?.Name</span>
+            </div>
+            <div class="mb-3">
+                <h4 class="text-danger">@Model.Price.ToString("N0") đ</h4>
+                <del class="text-muted">@Model.Price2.ToString("N0") đ</del>
+            </div>
+            <div class="mb-3">
+                <h5>Mô tả sản phẩm</h5>
+                <p>@Model.Description</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Sửa
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Xóa
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .color-options {
+        display: flex;
+        gap: 10px;
+    }
+
+    .color-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .color-option:hover {
+        transform: scale(1.1);
+    }
+
+    .btn-check:checked + .color-option {
+        border-color: #3498db;
+        transform: scale(1.1);
+    }
+
+    .btn-check:checked + .btn-outline-dark {
+        background-color: #2c3e50;
+        color: white;
+    }
+
+    .product-image-wrapper {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .breadcrumb-item a {
+        color: #3498db;
+    }
+
+    .breadcrumb-item.active {
+        color: #2c3e50;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Quantity controls
+            $('#decreaseQuantity').click(function() {
+                var input = $('#quantity');
+                var value = parseInt(input.val());
+                if (value > 1) {
+                    input.val(value - 1);
+                }
+            });
+
+            $('#increaseQuantity').click(function() {
+                var input = $('#quantity');
+                input.val(parseInt(input.val()) + 1);
+            });
+
+            // Add to cart form submission
+            $('#addToCartForm').submit(function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    productId: $('input[name="productId"]').val(),
+                    quantity: $('#quantity').val(),
+                    size: $('input[name="size"]:checked').val(),
+                    color: $('input[name="color"]:checked').val()
+                };
+
+                $.post('/Cart/AddToCart', formData)
+                    .done(function() {
+                        location.reload();
+                    })
+                    .fail(function() {
+                        alert('Error adding item to cart');
+                    });
+            });
+        });
+    </script>
+}

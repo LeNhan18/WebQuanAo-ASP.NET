@@ -1,0 +1,222 @@
+@* @model IEnumerable<Productt.Models.Cart> *@
+
+@* @{ *@
+@*     ViewData["Title"] = "Shopping Cart"; *@
+@* } *@
+
+@* <div class="container mt-4"> *@
+@*     <h2>Shopping Cart</h2> *@
+
+@*     @if (!Model.Any()) *@
+@*     { *@
+@*         <div class="alert alert-info"> *@
+@*             Your cart is empty. <a asp-controller="Product" asp-action="Index">Continue shopping</a> *@
+@*         </div> *@
+@*     } *@
+@*     else *@
+@*     { *@
+@*         <div class="table-responsive"> *@
+@*             <table class="table"> *@
+@*                 <thead> *@
+@*                     <tr> *@
+@*                         <th>Product</th> *@
+@*                         <th>Size</th> *@
+@*                         <th>Color</th> *@
+@*                         <th>Price</th> *@
+@*                         <th>Quantity</th> *@
+@*                         <th>Total</th> *@
+@*                         <th></th> *@
+@*                     </tr> *@
+@*                 </thead> *@
+@*                 <tbody> *@
+@*                     @foreach (var item in Model) *@
+@*                     { *@
+@*                         <tr data-cart-id="@item.Id"> *@
+@*                             <td> *@
+@*                                 <img src="@item.CartItems" alt="@item.Product.Name" style="width: 50px; height: 50px; object-fit: cover;" /> *@
+@*                                 <span class="ml-2">@item.Product.Name</span> *@
+@*                             </td> *@
+@*                             <td>@item.Size</td> *@
+@*                             <td>@item.Color</td> *@
+@*                             <td>@item.Product.Price.ToString("C")</td> *@
+@*                             <td> *@
+@*                                 <div class="input-group" style="width: 120px;"> *@
+@*                                     <button class="btn btn-outline-secondary btn-sm quantity-decrease">-</button> *@
+@*                                     <input type="number" class="form-control quantity-input" value="@item.Quantity" min="1" /> *@
+@*                                     <button class="btn btn-outline-secondary btn-sm quantity-increase">+</button> *@
+@*                                 </div> *@
+@*                             </td> *@
+@*                             <td class="item-total">@((item.Product.Price * item.Quantity).ToString("C"))</td> *@
+@*                             <td> *@
+@*                                 <button class="btn btn-danger btn-sm remove-item"> *@
+@*                                     <i class="fas fa-trash"></i> *@
+@*                                 </button> *@
+@*                             </td> *@
+@*                         </tr> *@
+@*                     } *@
+@*                 </tbody> *@
+@*                 <tfoot> *@
+@*                     <tr> *@
+@*                         <td colspan="5" class="text-right"><strong>Total:</strong></td> *@
+@*                         <td colspan="2"> *@
+@*                             <strong id="cart-total"> *@
+@*                                 @Model.Sum(i => i.Product.Price * i.Quantity).ToString("C") *@
+@*                             </strong> *@
+@*                         </td> *@
+@*                     </tr> *@
+@*                 </tfoot> *@
+@*             </table> *@
+@*         </div> *@
+
+@*         <div class="row mt-4"> *@
+@*             <div class="col-md-6"> *@
+@*                 <a asp-controller="Product" asp-action="Index" class="btn btn-outline-primary"> *@
+@*                     <i class="fas fa-arrow-left"></i> Continue Shopping *@
+@*                 </a> *@
+@*             </div> *@
+@*             <div class="col-md-6 text-right"> *@
+@*                 <button id="checkout-button" class="btn btn-success"> *@
+@*                     Proceed to Checkout <i class="fas fa-arrow-right"></i> *@
+@*                 </button> *@
+@*             </div> *@
+@*         </div> *@
+
+@*         <div class="modal fade" id="checkoutModal" tabindex="-1"> *@
+@*             <div class="modal-dialog"> *@
+@*                 <div class="modal-content"> *@
+@*                     <div class="modal-header"> *@
+@*                         <h5 class="modal-title">Checkout</h5> *@
+@*                         <button type="button" class="close" data-dismiss="modal"> *@
+@*                             <span>&times;</span> *@
+@*                         </button> *@
+@*                     </div> *@
+@*                     <div class="modal-body"> *@
+@*                         <form id="checkout-form"> *@
+@*                             <div class="form-group"> *@
+@*                                 <label>First Name</label> *@
+@*                                 <input type="text" class="form-control" name="firstName" required> *@
+@*                             </div> *@
+@*                             <div class="form-group"> *@
+@*                                 <label>Last Name</label> *@
+@*                                 <input type="text" class="form-control" name="lastName" required> *@
+@*                             </div> *@
+@*                             <div class="form-group"> *@
+@*                                 <label>Email</label> *@
+@*                                 <input type="email" class="form-control" name="email" required> *@
+@*                             </div> *@
+@*                             <div class="form-group"> *@
+@*                                 <label>Phone</label> *@
+@*                                 <input type="tel" class="form-control" name="phoneNumber" required> *@
+@*                             </div> *@
+@*                             <div class="form-group"> *@
+@*                                 <label>Address</label> *@
+@*                                 <input type="text" class="form-control" name="address" required> *@
+@*                             </div> *@
+@*                             <div class="form-group"> *@
+@*                                 <label>City</label> *@
+@*                                 <input type="text" class="form-control" name="city" required> *@
+@*                             </div> *@
+@*                         </form> *@
+@*                     </div> *@
+@*                     <div class="modal-footer"> *@
+@*                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> *@
+@*                         <button type="button" class="btn btn-primary" id="place-order">Place Order</button> *@
+@*                     </div> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*     } *@
+@* </div> *@
+
+@* @section Scripts { *@
+@*     <script> *@
+@*         $(document).ready(function() { *@
+@*             $('.quantity-decrease').click(function() { *@
+@*                 const input = $(this).siblings('.quantity-input'); *@
+@*                 const newValue = parseInt(input.val()) - 1; *@
+@*                 if (newValue >= 1) { *@
+@*                     input.val(newValue); *@
+@*                     updateQuantity($(this).closest('tr')); *@
+@*                 } *@
+@*             }); *@
+
+@*             $('.quantity-increase').click(function() { *@
+@*                 const input = $(this).siblings('.quantity-input'); *@
+@*                 input.val(parseInt(input.val()) + 1); *@
+@*                 updateQuantity($(this).closest('tr')); *@
+@*             }); *@
+
+@*             $('.quantity-input').change(function() { *@
+@*                 updateQuantity($(this).closest('tr')); *@
+@*             }); *@
+
+@*             $('.remove-item').click(function() { *@
+@*                 const row = $(this).closest('tr'); *@
+@*                 const cartId = row.data('cart-id'); *@
+
+@*                 $.post('/Cart/RemoveFromCart', { cartId: cartId }) *@
+@*                     .done(function() { *@
+@*                         row.remove(); *@
+@*                         updateCartTotal(); *@
+@*                         if ($('tbody tr').length === 0) { *@
+@*                             location.reload(); *@
+@*                         } *@
+@*                     }); *@
+@*             }); *@
+
+@*             function updateQuantity(row) { *@
+@*                 const cartId = row.data('cart-id'); *@
+@*                 const quantity = row.find('.quantity-input').val(); *@
+@*                 const price = parseFloat(row.find('td:eq(3)').text().replace(/[^0-9.-]+/g, '')); *@
+
+@*                 $.post('/Cart/UpdateQuantity', { cartId: cartId, quantity: quantity }) *@
+@*                     .done(function() { *@
+@*                         row.find('.item-total').text('$' + (price * quantity).toFixed(2)); *@
+@*                         updateCartTotal(); *@
+@*                     }); *@
+@*             } *@
+
+@*             function updateCartTotal() { *@
+@*                 let total = 0; *@
+@*                 $('.item-total').each(function() { *@
+@*                     total += parseFloat($(this).text().replace(/[^0-9.-]+/g, '')); *@
+@*                 }); *@
+@*                 $('#cart-total').text('$' + total.toFixed(2)); *@
+@*             } *@
+
+@*             $('#checkout-button').click(function() { *@
+@*                 $('#checkoutModal').modal('show'); *@
+@*             }); *@
+
+@*             $('#place-order').click(function() { *@
+@*                 const form = $('#checkout-form'); *@
+@*                 if (!form[0].checkValidity()) { *@
+@*                     form[0].reportValidity(); *@
+@*                     return; *@
+@*                 } *@
+
+@*                 const orderData = { *@
+@*                     firstName: form.find('[name="firstName"]').val(), *@
+@*                     lastName: form.find('[name="lastName"]').val(), *@
+@*                     email: form.find('[name="email"]').val(), *@
+@*                     phoneNumber: form.find('[name="phoneNumber"]').val(), *@
+@*                     address: form.find('[name="address"]').val(), *@
+@*                     city: form.find('[name="city"]').val() *@
+@*                 }; *@
+
+@*                 $.ajax({ *@
+@*                     url: '/Order/Create', *@
+@*                     type: 'POST', *@
+@*                     contentType: 'application/json', *@
+@*                     data: JSON.stringify(orderData), *@
+@*                     success: function(response) { *@
+@*                         window.location.href = '/Order/Details/' + response.orderId; *@
+@*                     }, *@
+@*                     error: function(xhr) { *@
+@*                         alert('Error placing order. Please try again.'); *@
+@*                     } *@
+@*                 }); *@
+@*             }); *@
+@*         }); *@
+@*     </script> *@
+@* } *@

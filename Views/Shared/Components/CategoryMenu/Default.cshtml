@@ -1,0 +1,16 @@
+﻿
+@{
+    ViewData["Title"] = "View";
+}
+@model IEnumerable<Productt.Models.Category>
+
+<ul>
+    @foreach (var category in Model)
+    {
+        <li>
+            <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@category.Id">
+                @category.Name
+            </a>
+        </li>
+    }
+</ul>

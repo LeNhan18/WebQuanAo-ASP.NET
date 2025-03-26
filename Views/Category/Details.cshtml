@@ -1,0 +1,118 @@
+@model Productt.Models.Category
+
+@{
+    ViewData["Title"] = "Category Details";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="card-title mb-1">@Model.Name</h2>
+                            <p class="text-muted mb-0">Category Details</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                                    <i class="fas fa-edit me-2"></i>Edit
+                                </a>
+                            }
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to List
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-3">Products in this Category</h5>
+                                    @if (Model.Products != null && Model.Products.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <th>Price</th>
+                                                        <th>Status</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var product in Model.Products)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    @if (!string.IsNullOrEmpty(product.imageUrl))
+                                                                    {
+                                                                        <img src="@product.imageUrl" alt="@product.Name" 
+                                                                             class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;" />
+                                                                    }
+                                                                    @product.Name
+                                                                </div>
+                                                            </td>
+                                                            <td>@product.Price.ToString("C")</td>
+                                                            <td>
+                                                                @if (product.IsAvailable)
+                                                                {
+                                                                    <span class="badge bg-success">In Stock</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-danger">Out of Stock</span>
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                <a asp-controller="Product" asp-action="Details" 
+                                                                   asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                            <h5>No Products Found</h5>
+                                            <p class="text-muted mb-0">This category doesn't have any products yet.</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 15px;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        border-top: none;
+    }
+
+    .badge {
+        padding: 0.5em 0.8em;
+    }
+</style>

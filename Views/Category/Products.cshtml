@@ -1,0 +1,286 @@
+@model Productt.Models.Category
+
+@{
+    ViewData["Title"] = $"{Model.Name} Products";
+}
+
+<div class="container my-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none">Categories</a></li>
+            <li class="breadcrumb-item active">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">@Model.Name</h2>
+            <p class="text-muted mb-0">@(Model.Products?.Count() ?? 0) products in this category</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-sort me-2"></i>Sort By
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" data-sort="name">Name</a></li>
+                    <li><a class="dropdown-item" href="#" data-sort="price-asc">Price: Low to High</a></li>
+                    <li><a class="dropdown-item" href="#" data-sort="price-desc">Price: High to Low</a></li>
+                </ul>
+            </div>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@Model.Id" 
+                   class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Product
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Filters</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Price Filter -->
+                        <div class="mb-3">
+                            <label class="form-label">Price Range</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control me-2" placeholder="Min" id="minPrice">
+                                <input type="number" class="form-control" placeholder="Max" id="maxPrice">
+                            </div>
+                        </div>
+
+                        <!-- Brand Filter -->
+                        <div class="mb-3">
+                            <label class="form-label">Brand</label>
+                            <select class="form-select" id="brandFilter">
+                                <option value="">All Brands</option>
+                                @foreach (var brand in Model.Products.Select(p => p.Brand).Distinct())
+                                {
+                                    <option value="@brand">@brand</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Gender Filter -->
+                        <div class="mb-3">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select" id="genderFilter">
+                                <option value="">All</option>
+                                @foreach (var gender in Model.Products.Select(p => p.Gender).Distinct())
+                                {
+                                    <option value="@gender">@gender</option>
+                                }
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="row row-cols-1 row-cols-md-3 g-4" id="productsGrid">
+                    @if (Model.Products != null && Model.Products.Any())
+                    {
+                        @foreach (var product in Model.Products)
+                        {
+                            <div class="col product-card" 
+                                 data-price="@product.Price" 
+                                 data-brand="@product.Brand" 
+                                 data-gender="@product.Gender">
+                                <div class="card h-100">
+                                    <img src="@product.imageUrl" class="card-img-top" alt="@product.Name"
+                                         style="height: 200px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@product.Name</h5>
+                                        <p class="card-text">
+                                            <small class="text-muted">@product.Brand</small>
+                                        </p>
+                                        <p class="card-text">@product.Description</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                @if (product.Price2 > product.Price)
+                                                {
+                                                    <span class="text-decoration-line-through text-muted me-2">
+                                                        $@product.Price2.ToString("N2")
+                                                    </span>
+                                                }
+                                                <span class="text-primary fw-bold">$@product.Price.ToString("N2")</span>
+                                            </div>
+                                            <a href="#" class="btn btn-outline-primary add-to-cart"
+                                               data-product-id="@product.Id">
+                                                Add to Cart
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center my-5">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <h3>No Products Found</h3>
+                            <p class="text-muted">This category doesn't have any products yet.</p>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@Model.Id" 
+                                   class="btn btn-primary mt-3">
+                                    <i class="fas fa-plus me-2"></i>Add First Product
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .product-card {
+            transition: transform 0.2s;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+        }
+
+        .dropdown-item i {
+            width: 1rem;
+            text-align: center;
+        }
+
+        .breadcrumb-item a {
+            color: #3498db;
+        }
+
+        .breadcrumb-item.active {
+            color: #2c3e50;
+        }
+    </style>
+
+    @section Scripts {
+        <script>
+            $(document).ready(function() {
+                // Sorting functionality
+                $('.dropdown-item[data-sort]').click(function(e) {
+                    e.preventDefault();
+                    const sortBy = $(this).data('sort');
+                    const $grid = $('#products-grid');
+                    const $items = $grid.children();
+
+                    $items.sort(function(a, b) {
+                        const $a = $(a);
+                        const $b = $(b);
+
+                        switch(sortBy) {
+                            case 'name':
+                                return $a.data('name').localeCompare($b.data('name'));
+                            case 'price-asc':
+                                return $a.data('price') - $b.data('price');
+                            case 'price-desc':
+                                return $b.data('price') - $a.data('price');
+                            default:
+                                return 0;
+                        }
+                    });
+
+                    $grid.empty().append($items);
+                });
+
+                // Filter products
+                $('#applyFilters').click(function () {
+                    var minPrice = parseFloat($('#minPrice').val()) || 0;
+                    var maxPrice = parseFloat($('#maxPrice').val()) || Number.MAX_VALUE;
+                    var selectedBrand = $('#brandFilter').val();
+                    var selectedGender = $('#genderFilter').val();
+
+                    $('.product-card').each(function () {
+                        var price = parseFloat($(this).data('price'));
+                        var brand = $(this).data('brand');
+                        var gender = $(this).data('gender');
+
+                        var showProduct = price >= minPrice && price <= maxPrice &&
+                            (!selectedBrand || brand === selectedBrand) &&
+                            (!selectedGender || gender === selectedGender);
+
+                        $(this).toggle(showProduct);
+                    });
+                });
+
+                // Add to cart functionality
+                $('.add-to-cart').click(function (e) {
+                    e.preventDefault();
+                    var productId = $(this).data('product-id');
+
+                    // Show size and color selection modal
+                    $('#productId').val(productId);
+                    $('#addToCartModal').modal('show');
+                });
+            });
+        </script>
+    }
+
+    <!-- Add to Cart Modal -->
+    <div class="modal fade" id="addToCartModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addToCartForm" method="post" asp-controller="Cart" asp-action="AddToCart">
+                        <input type="hidden" id="productId" name="productId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Size</label>
+                            <select class="form-select" name="size" required>
+                                <option value="">Select Size</option>
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Color</label>
+                            <select class="form-select" name="color" required>
+                                <option value="">Select Color</option>
+                                <option value="Black">Black</option>
+                                <option value="White">White</option>
+                                <option value="Red">Red</option>
+                                <option value="Blue">Blue</option>
+                                <option value="Green">Green</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" name="quantity" 
+                                   value="1" min="1" max="10" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>

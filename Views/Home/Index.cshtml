@@ -1,0 +1,40 @@
+﻿@model IEnumerable<Productt.Models.Product>
+<link href="~/css/index.css" rel="stylesheet" />
+<!-- Container for the product grid -->
+<div class="product-container">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var product in Model)
+        {
+            <div class="product-card">
+                <div class="product-badge">Sale</div>
+                <div class="product-tumb">
+                    <img src="@(string.IsNullOrEmpty(product.imageUrl) ? "/images/def" : product.imageUrl)" alt="@product.Name">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-title">
+                        <a href="#">@product.Name</a>
+                    </h3>
+                    <div class="product-price">
+                        <span class="current">@product.Price.ToString("N0") đ</span>
+                        <span class="original">@product.Price2.ToString("N0") đ</span>
+                    </div>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half"></i>
+                    </div>
+                    <div class="product-category">
+                        @(product.Category?.Name ?? "Chưa phân loại")
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p>Không có sản phẩm nào.</p>
+    }
+</div>
