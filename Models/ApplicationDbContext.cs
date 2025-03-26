@@ -12,6 +12,8 @@ namespace Productt.Models
 
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -57,6 +59,62 @@ namespace Productt.Models
 
                 entity.Property(u => u.Address)
                     .HasMaxLength(200);
+            });
+
+            // Cấu hình Cart
+            modelBuilder.Entity<Cart>(entity =>
+            {
+                entity.HasKey(c => c.Id);
+
+                entity.Property(c => c.UserId)
+                    .IsRequired();
+
+                // Quan hệ với User
+                entity.HasOne(c => c.User)
+                    .WithOne()
+                    .HasForeignKey<Cart>(c => c.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Cấu hình CartItem
+            modelBuilder.Entity<CartItem>(entity =>
+            {
+                entity.HasKey(ci => ci.Id);
+
+                entity.Property(ci => ci.UserId)
+                    .IsRequired();
+
+                entity.Property(ci => ci.Size)
+                    .IsRequired()
+                    .HasMaxLength(10);
+
+                entity.Property(ci => ci.Color)
+                    .IsRequired()
+                    .HasMaxLength(20);
+
+                entity.Property(ci => ci.Quantity)
+                    .IsRequired();
+
+                entity.Property(ci => ci.DateAdded)
+                    .IsRequired();
+
+                // Quan hệ với Cart
+                entity.HasOne(ci => ci.Cart)
+                    .WithMany(c => c.CartItems)
+                    .HasForeignKey(ci => ci.CartId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Quan hệ với User
+                entity.HasOne(ci => ci.User)
+                    .WithMany()
+                    .HasForeignKey(ci => ci.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Quan hệ với Product
+                entity.HasOne(ci => ci.Product)
+                    .WithMany()
+                    .HasForeignKey(ci => ci.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

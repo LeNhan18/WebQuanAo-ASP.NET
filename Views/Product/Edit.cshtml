@@ -1,86 +1,193 @@
 @model Productt.Models.Product
 
-@{
-    ViewData["Title"] = "Chỉnh sửa sản phẩm";
-}
-
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Sửa sản phẩm</h4>
-                </div>
-                <div class="card-body">
-                    <form asp-action="Edit" enctype="multipart/form-data">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <input type="hidden" asp-for="Id" />
+    <div class="edit-form">
+        <h2 class="section-title">
+            <i class="fas fa-edit me-2"></i>Chỉnh sửa sản phẩm
+        </h2>
 
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label">Tên sản phẩm</label>
-                            <input asp-for="Name" class="form-control" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
-                        </div>
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="imageUrl" />
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="Price" class="form-label">Giá bán</label>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group mb-3">
+                        <label asp-for="Name" class="control-label">Tên sản phẩm</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Price" class="control-label">Giá bán</label>
                                 <div class="input-group">
                                     <input asp-for="Price" class="form-control" />
-                                    <span class="input-group-text">đ</span>
+                                    <span class="input-group-text">.000đ</span>
                                 </div>
                                 <span asp-validation-for="Price" class="text-danger"></span>
                             </div>
-                            <div class="col-md-6">
-                                <label asp-for="Price2" class="form-label">Giá gốc</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Price2" class="control-label">Giá gốc</label>
                                 <div class="input-group">
                                     <input asp-for="Price2" class="form-control" />
-                                    <span class="input-group-text">đ</span>
+                                    <span class="input-group-text">.000đ</span>
                                 </div>
                                 <span asp-validation-for="Price2" class="text-danger"></span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label">Mô tả</label>
-                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
-                        </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="CategoryId" class="control-label">Danh mục</label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId">
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
 
-                        <div class="mb-3">
-                            <label asp-for="CategoryId" class="form-label">Danh mục</label>
-                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
-                                <option value="">-- Chọn danh mục --</option>
-                            </select>
-                            <span asp-validation-for="CategoryId" class="text-danger"></span>
-                        </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Description" class="control-label">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Hình ảnh</label>
-                            <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                    <div class="form-group mb-3">
+                        <label asp-for="ImageFile" class="control-label">Hình ảnh mới</label>
+                        <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+                        <span asp-validation-for="ImageFile" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="current-image mb-3">
+                        <label class="control-label">Hình ảnh hiện tại</label>
+                        <div class="image-container">
                             @if (!string.IsNullOrEmpty(Model.imageUrl))
                             {
-                                <div class="mt-2">
-                                    <img src="@Model.imageUrl" alt="Current Image" style="max-height: 100px;" />
+                                <img src="@Model.imageUrl" alt="@Model.Name" class="img-fluid current-product-image" />
+                            }
+                            else
+                            {
+                                <div class="no-image">
+                                    <i class="fas fa-image"></i>
+                                    <p>Chưa có hình ảnh</p>
                                 </div>
                             }
                         </div>
+                    </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a asp-action="Index" class="btn btn-secondary me-md-2">
-                                <i class="fas fa-arrow-left me-1"></i>Quay lại
-                            </a>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-save me-1"></i>Lưu thay đổi
-                            </button>
+                    <div class="new-image-preview">
+                        <label class="control-label">Xem trước hình ảnh mới</label>
+                        <div class="image-preview-container">
+                            <img id="imagePreview" src="#" alt="Preview" class="img-fluid d-none" />
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="form-actions mt-4">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-save me-2"></i>Lưu thay đổi
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
+<style>
+.edit-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.section-title {
+    color: #2c3e50;
+    margin-bottom: 2rem;
+}
+
+.image-container {
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.current-product-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 5px;
+}
+
+.no-image {
+    color: #95a5a6;
+    text-align: center;
+}
+
+.no-image i {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.image-preview-container {
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#imagePreview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 5px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-actions .btn {
+    padding: 0.5rem 2rem;
+}
+</style>
+
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Preview image before upload
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    $('#imagePreview')
+                        .attr('src', e.target.result)
+                        .removeClass('d-none');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        $("#ImageFile").change(function() {
+            readURL(this);
+        });
+    </script>
 } 

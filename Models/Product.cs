@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Http;
 
@@ -23,11 +23,13 @@ namespace Productt.Models
         [Display(Name = "Tên sản phẩm")]
         public string Name { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập giá")]
-        [Range(0, double.MaxValue, ErrorMessage = "Giá phải lớn hơn 0")]
+        [Required(ErrorMessage = "Vui lòng nhập giá bán")]
+        [Range(0, 100000000000, ErrorMessage = "Giá bán phải lớn hơn 0")]
         [Display(Name = "Giá bán")]
         public decimal Price { get; set; }
 
+        [Required(ErrorMessage = "Vui lòng nhập giá gốc")]
+        [Range(0, 100000000000, ErrorMessage = "Giá gốc phải lớn hơn 0")]
         [Display(Name = "Giá gốc")]
         public decimal Price2 { get; set; }
 

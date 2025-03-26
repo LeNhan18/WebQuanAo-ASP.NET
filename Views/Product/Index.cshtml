@@ -55,7 +55,14 @@
                         <h5 class="product-title">@item.Name</h5>
                         <p class="product-category">@item.Category?.Name</p>
                         <div class="product-price">
-                            <span class="price">@item.Price.ToString("N0") đ</span>
+                            <span class="price">@item.Price.ToString("N0") .000đ</span>
+                            @if (item.Price2 > item.Price)
+                            {
+                                <span class="original-price">@item.Price2.ToString("N0") .000đ</span>
+                                <span class="discount">
+                                    -@(((item.Price2 - item.Price) / item.Price2 * 100).ToString("0"))%
+                                </span>
+                            }
                         </div>
                     </div>
                 </div>

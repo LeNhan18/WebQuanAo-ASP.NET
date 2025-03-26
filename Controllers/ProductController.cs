@@ -80,18 +80,17 @@ namespace Productt.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([Bind("Name,Description,Price,CategoryId,ImageFile")] Product product)
+        public async Task<IActionResult> Create([Bind("Name,Description,Price,Price2,CategoryId,ImageFile")] Product product)
         {
             if (ModelState.IsValid)
             {
                 // Xử lý upload ảnh
-                if (product.ImageFile != null)
+                if (product.ImageFile != null)          
                 {
                     string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
                     string uniqueFileName = Guid.NewGuid().ToString() + "_" + product.ImageFile.FileName;
                     string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                    // Tạo thư mục nếu chưa tồn tại
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
@@ -105,7 +104,8 @@ namespace Productt.Controllers
                     product.imageUrl = "/images/products/" + uniqueFileName;
                 }
 
-                await _productRepository.AddAsync(product);
+                _context.Add(product);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
@@ -135,7 +135,7 @@ namespace Productt.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,CategoryId,ImageUrl,ImageFile")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Price2,CategoryId,ImageUrl,ImageFile")] Product product)
         {
             if (id != product.Id)
             {
@@ -149,7 +149,7 @@ namespace Productt.Controllers
                     // Xử lý upload ảnh mới nếu có
                     if (product.ImageFile != null)
                     {
-                        // Xóa ảnh cũ nếu tồn tại
+                        // Xóa ảnh cũ
                         if (!string.IsNullOrEmpty(product.imageUrl))
                         {
                             string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, 
@@ -173,7 +173,8 @@ namespace Productt.Controllers
                         product.imageUrl = "/images/products/" + uniqueFileName;
                     }
 
-                    await _productRepository.UpdateAsync(product);
+                    _context.Update(product);
+                    await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
