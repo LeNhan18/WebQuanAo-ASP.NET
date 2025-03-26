@@ -1,0 +1,85 @@
+@{
+    ViewData["Title"] = "Không có quyền truy cập";
+}
+
+<div class="access-denied">
+    <div class="access-denied-content">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h1>403</h1>
+        <h2>Không có quyền truy cập!</h2>
+        <p>Xin lỗi, bạn không có quyền truy cập vào trang này.</p>
+        <div class="action-buttons">
+            <a href="javascript:history.back()" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.access-denied {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+.access-denied-content {
+    max-width: 500px;
+    padding: 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    animation: slideUp 0.5s ease;
+}
+
+.error-icon {
+    font-size: 5rem;
+    color: #e74c3c;
+    margin-bottom: 1rem;
+    animation: pulse 2s infinite;
+}
+
+.access-denied h1 {
+    font-size: 4rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.access-denied h2 {
+    font-size: 1.5rem;
+    color: #e74c3c;
+    margin: 1rem 0;
+}
+
+.access-denied p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+}
+
+
+</style> 

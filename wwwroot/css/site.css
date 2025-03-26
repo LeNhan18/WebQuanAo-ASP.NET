@@ -249,3 +249,29 @@ body {
         margin-top: 1.5rem;
     }
 }
+
+/* Các style cơ bản */
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Loại bỏ các keyframes và media queries phức tạp */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.access-denied h1 {
+    font-size: 3rem;
+}
+
+/* Responsive */
+@media screen and (max-width: 576px) {
+    .action-buttons {
+        flex-direction: column;
+    }
+}

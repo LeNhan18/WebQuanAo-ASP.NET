@@ -8,9 +8,12 @@ using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using Productt.Constants;
 
 namespace Productt.Controllers
 {
+    [Authorize(Roles = Roles.Admin)]
     public class ProductController : Controller
     {
         private readonly IProductRepository _productRepository;
@@ -28,7 +31,8 @@ namespace Productt.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: Product
+        // Cho phép tất cả người dùng xem danh sách
+        [AllowAnonymous]
         public async Task<IActionResult> Index(int? categoryId)
         {
             var query = _context.Products
@@ -40,13 +44,12 @@ namespace Productt.Controllers
                 query = query.Where(p => p.CategoryId == categoryId);
             }
 
-            var categories = await _context.Categories.ToListAsync();
-            
-            ViewBag.Categories = categories; // Truyền categories qua ViewBag
-            return View(await query.ToListAsync());
+            var products = await query.ToListAsync();
+            return View(products);
         }
 
-        // GET: Product/Details/5
+        // Cho phép tất cả người dùng xem chi tiết
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -66,47 +69,52 @@ namespace Productt.Controllers
             return View(product);
         }
 
-        // GET: Product/Create
+        // Chỉ Admin mới có quyền thêm sản phẩm
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name");
             return View();
         }
 
-        // POST: Product/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Price,Price2,Description,imageUrl,CategoryId")] Product product, IFormFile? imageFile)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create([Bind("Name,Description,Price,CategoryId,ImageFile")] Product product)
         {
             if (ModelState.IsValid)
             {
-                if (imageFile != null && imageFile.Length > 0)
+                // Xử lý upload ảnh
+                if (product.ImageFile != null)
                 {
-                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + product.ImageFile.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     // Tạo thư mục nếu chưa tồn tại
                     if (!Directory.Exists(uploadsFolder))
+                    {
                         Directory.CreateDirectory(uploadsFolder);
+                    }
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await imageFile.CopyToAsync(fileStream);
+                        await product.ImageFile.CopyToAsync(fileStream);
                     }
 
-                    product.imageUrl = "/images/" + uniqueFileName;
+                    product.imageUrl = "/images/products/" + uniqueFileName;
                 }
 
                 await _productRepository.AddAsync(product);
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
             return View(product);
         }
 
-        // GET: Product/Edit/5
+        // Chỉ Admin mới có quyền sửa
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -120,14 +128,14 @@ namespace Productt.Controllers
                 return NotFound();
             }
 
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
             return View(product);
         }
 
-        // POST: Product/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Price,Price2,Description,imageUrl,CategoryId")] Product product, IFormFile? imageFile)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,CategoryId,ImageUrl,ImageFile")] Product product)
         {
             if (id != product.Id)
             {
@@ -138,35 +146,34 @@ namespace Productt.Controllers
             {
                 try
                 {
-                    if (imageFile != null && imageFile.Length > 0)
+                    // Xử lý upload ảnh mới nếu có
+                    if (product.ImageFile != null)
                     {
-                        var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        if (!Directory.Exists(uploadsFolder))
-                            Directory.CreateDirectory(uploadsFolder);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(fileStream);
-                        }
-
-                        // Xóa ảnh cũ nếu có
+                        // Xóa ảnh cũ nếu tồn tại
                         if (!string.IsNullOrEmpty(product.imageUrl))
                         {
-                            var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, product.imageUrl.TrimStart('/'));
+                            string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, 
+                                product.imageUrl.TrimStart('/'));
                             if (System.IO.File.Exists(oldImagePath))
                             {
                                 System.IO.File.Delete(oldImagePath);
                             }
                         }
 
-                        product.imageUrl = "/images/" + uniqueFileName;
+                        // Upload ảnh mới
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/products");
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + product.ImageFile.FileName;
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await product.ImageFile.CopyToAsync(fileStream);
+                        }
+
+                        product.imageUrl = "/images/products/" + uniqueFileName;
                     }
 
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
+                    await _productRepository.UpdateAsync(product);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
@@ -181,11 +188,13 @@ namespace Productt.Controllers
                     }
                 }
             }
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
+
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
             return View(product);
         }
 
-        // GET: Product/Delete/5
+        // Chỉ Admin mới có quyền xóa
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -205,27 +214,28 @@ namespace Productt.Controllers
             return View(product);
         }
 
-        // POST: Product/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                // Xóa ảnh khi xóa sản phẩm
+                // Xóa file ảnh
                 if (!string.IsNullOrEmpty(product.imageUrl))
                 {
-                    var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, product.imageUrl.TrimStart('/'));
+                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, 
+                        product.imageUrl.TrimStart('/'));
                     if (System.IO.File.Exists(imagePath))
                     {
                         System.IO.File.Delete(imagePath);
                     }
                 }
 
-                _context.Products.Remove(product);
-                await _context.SaveChangesAsync();
+                await _productRepository.DeleteAsync(product.Id);
             }
+
             return RedirectToAction(nameof(Index));
         }
 
