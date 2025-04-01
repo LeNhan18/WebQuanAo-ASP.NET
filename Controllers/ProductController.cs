@@ -30,23 +30,75 @@ namespace Productt.Controllers
             _context = context;
             _webHostEnvironment = webHostEnvironment;
         }
-
-        // Cho phép tất cả người dùng xem danh sách
         [AllowAnonymous]
-        public async Task<IActionResult> Index(int? categoryId)
+        public async Task<IActionResult> Index(ProductSearchModel searchModel)
         {
             var query = _context.Products
                 .Include(p => p.Category)
                 .AsQueryable();
 
-            if (categoryId.HasValue)
+            if (!string.IsNullOrEmpty(searchModel.SearchTerm))
             {
-                query = query.Where(p => p.CategoryId == categoryId);
+                query = query.Where(p => EF.Functions.Like(p.Name, $"%{searchModel.SearchTerm}%") ||
+                                       EF.Functions.Like(p.Description ?? "", $"%{searchModel.SearchTerm}%"));
+            }
+
+            if (searchModel.MinPrice.HasValue)
+            {
+                query = query.Where(p => p.Price >= searchModel.MinPrice.Value);
+            }
+
+            if (searchModel.MaxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= searchModel.MaxPrice.Value);
+            }
+
+            if (searchModel.CategoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == searchModel.CategoryId);
+            }
+
+            if (!string.IsNullOrEmpty(searchModel.Gender))
+            {
+                query = query.Where(p => p.Gender == searchModel.Gender);
+            }
+
+            if (!string.IsNullOrEmpty(searchModel.Brand))
+            {
+                query = query.Where(p => p.Brand == searchModel.Brand);
             }
 
             var products = await query.ToListAsync();
+
+            // Populate filter options
+            var categories = await _context.Categories
+                .Select(c => new { c.Id, c.Name })
+                .ToListAsync();
+            ViewBag.Categories = new SelectList(categories, "Id", "Name");
+            searchModel.Brands = await _context.Products.Select(p => p.Brand).Distinct().ToListAsync();
+            searchModel.Genders = await _context.Products.Select(p => p.Gender).Distinct().ToListAsync();
+
+            ViewBag.SearchModel = searchModel;
             return View(products);
         }
+
+
+        //// Cho phép tất cả người dùng xem danh sách
+        //[AllowAnonymous]
+        //public async Task<IActionResult> Index(int? categoryId)
+        //{
+        //    var query = _context.Products
+        //        .Include(p => p.Category)
+        //        .AsQueryable();
+
+        //    if (categoryId.HasValue)
+        //    {
+        //        query = query.Where(p => p.CategoryId == categoryId);
+        //    }
+
+        //    var products = await query.ToListAsync();
+        //    return View(products);
+        //}
 
         // Cho phép tất cả người dùng xem chi tiết
         [AllowAnonymous]
@@ -239,7 +291,51 @@ namespace Productt.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        [AllowAnonymous]
+        public async Task<IActionResult> GetSearchSuggestions(string term)
+        {
+            if (string.IsNullOrEmpty(term))
+                return Json(new List<object>());
 
+            var suggestions = await _context.Products
+                .Where(p => p.Name.ToLower().Contains(term.ToLower()) ||
+                          (p.Description != null && p.Description.ToLower().Contains(term.ToLower())))
+                .Take(5)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Price,
+                    ImageUrl = p.imageUrl
+                })
+                .ToListAsync();
+
+            return Json(suggestions);
+        }
+        public IActionResult GetSearchSuggestionss(string term, int? minPrice, int? maxPrice)
+        {
+            var query = _context.Products.Where(p => p.Name.Contains(term));
+
+            if (minPrice.HasValue)
+            {
+                query = query.Where(p => p.Price >= minPrice.Value);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            }
+
+            var products = query.Select(p => new
+            {
+                id = p.Id,
+                name = p.Name,
+                price = p.Price,
+                imageUrl = p.imageUrl
+            }).ToList();
+
+            return Json(products);
+        }
         private bool ProductExists(int id)
         {
             return _context.Products.Any(e => e.Id == id);

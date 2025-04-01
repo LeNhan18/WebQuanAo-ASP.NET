@@ -2,25 +2,117 @@ using Microsoft.EntityFrameworkCore;
 using Productt.Models;
 using System;
 using System.Threading.Tasks;
+using System.Linq;
+using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace Productt.Repositories
 {
     public class CartRepository : ICartRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<CartRepository> _logger;
 
-        public CartRepository(ApplicationDbContext context)
+        public CartRepository(ApplicationDbContext context, ILogger<CartRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
-        //Get By User Id
-
-        public async Task<CartItem> GetByUserIdAsync(string userId)
+        public async Task<Cart> GetCartAsync(string userId)
         {
-            return await _context.CartItems
-                .Include(c => c.Id)
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                        .ThenInclude(p => p.Category)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+            {
+                cart = new Cart { UserId = userId };
+                _context.Carts.Add(cart);
+                await _context.SaveChangesAsync();
+            }
+
+            return cart;
+        }
+
+        public async Task<CartItem> AddItemAsync(string userId, int productId, int quantity, string size, string color)
+        {
+            try
+            {
+                var cart = await GetCartAsync(userId);
+                
+                if (cart == null)
+                {
+                    cart = new Cart 
+                    { 
+                        UserId = userId,
+                        CartItems = new List<CartItem>()
+                    };
+                    _context.Carts.Add(cart);
+                    await _context.SaveChangesAsync();
+                }
+
+                var cartItem = new CartItem
+                {
+                    CartId = cart.Id,
+                    ProductId = productId,
+                    UserId = userId,
+                    Quantity = quantity,
+                    Size = size,
+                    Color = color,
+                    DateAdded = DateTime.Now
+                };
+
+                cart.CartItems.Add(cartItem);
+                await _context.SaveChangesAsync();
+
+                return cartItem;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AddItemAsync");
+                return null;
+            }
+        }
+
+        public async Task<bool> RemoveItemAsync(int cartItemId)
+        {
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.Id == cartItemId);
+
+            if (cartItem == null) 
+                return false;
+
+            _context.CartItems.Remove(cartItem);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateItemQuantityAsync(int cartItemId, int quantity)
+        {
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.Id == cartItemId);
+
+            if (cartItem == null) 
+                return false;
+
+            cartItem.Quantity = quantity;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ClearCartAsync(string userId)
+        {
+            var cart = await GetCartAsync(userId);
+            
+            if (cart == null || !cart.CartItems.Any()) 
+                return false;
+
+            _context.CartItems.RemoveRange(cart.CartItems);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<Cart> AddAsync(Cart cart)
@@ -45,82 +137,13 @@ namespace Productt.Repositories
                 await _context.SaveChangesAsync();
             }
         }
-        async Task<CartItem> ICartRepository.AddItemAsync(string userId, int productId, int quantity, string size, string color)
-        {
-            var cart = await GetByUserIdAsync(userId);
-            if (cart == null)
-            {
-                cart = new CartItem { UserId = userId };
-                _context.CartItems.Add(cart);
-                await _context.SaveChangesAsync();
-            }
-            var existingItem = await _context.CartItems
-                .FirstOrDefaultAsync(ci => ci.Id == cart.Id &&
-                ci.ProductId == productId &&
-                ci.Size == size &&
-                ci.Color == color);
-            if (existingItem != null)
-            {
-                existingItem.Quantity += quantity;
-                await _context.SaveChangesAsync();
-                return existingItem;
-            }
-            var cartItem = new CartItem
-            {
-                Id = cart.Id,
-                ProductId = productId,
-                Quantity = quantity,
-                Size = size,
-                Color = color,
-                DateAdded = DateTime.Now
 
-            };
-            _context.Add(cartItem);
-            await _context.SaveChangesAsync();
-            return cartItem;
-
-        }
-        public async Task UpdateItemQuantityAsync(int cartItemId, int quantity)
-        {
-            var cartItem = await _context.CartItems.FindAsync(cartItemId);
-            if (cartItem != null)
-            {
-                cartItem.Quantity = quantity;
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task RemoveItemAsync(int cartItemId)
-        {
-            var cartItem = await _context.CartItems.FindAsync(cartItemId);
-            if (cartItem != null)
-            {
-                _context.CartItems.Remove(cartItem);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task ClearCartAsync(string userId)
-        {
-            var cart = await GetByUserIdAsync(userId);
-            if (cart != null)
-            {
-                _context.CartItems.RemoveRange(cart);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public Task<CartItem> AddAsync(CartItem cart)
+        public async Task<CartItem> AddAsync(CartItem cart)
         {
             throw new NotImplementedException();
         }
 
         public Task UpdateAsync(CartItem cart)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<Cart> ICartRepository.GetByUserIdAsync(string userId)
         {
             throw new NotImplementedException();
         }

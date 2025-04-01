@@ -1,0 +1,274 @@
+    @model ProductSearchModel
+
+<div class="card mb-4 search-card">
+    <div class="card-body">
+        <form method="get" asp-controller="Product" asp-action="Index" id="searchForm">
+            <div class="search-box mb-4 position-relative">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input asp-for="SearchTerm" 
+                           class="form-control border-start-0" 
+                           placeholder="Tìm kiếm sản phẩm..." 
+                           autocomplete="off"
+                           id="searchInput" />
+                </div>
+                <div class="search-suggestions" id="searchSuggestions"></div>
+            </div>
+            
+            <div class="price-range mb-4">
+                <label class="form-label fw-bold">Khoảng giá</label>
+                <div class="row g-2">
+                    <div class="col">
+                        <div class="input-group">
+                            <input asp-for="MinPrice" type="text" class="form-control price-input" placeholder="Từ" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+                    <div class="col-auto d-flex align-items-center">
+                        <span class="text-muted">-</span>
+                    </div>
+                    <div class="col">
+                        <div class="input-group">
+                            <input asp-for="MaxPrice" type="text" class="form-control price-input" placeholder="Đến" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-select mb-4">
+                <label asp-for="CategoryId" class="form-label fw-bold">Danh mục</label>
+                <select asp-for="CategoryId" class="form-select" asp-items="@ViewBag.Categories">
+                    <option value="">Tất cả danh mục</option>
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                    <i class="fas fa-undo me-1"></i> Đặt lại
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i> Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.search-card {
+    border: none;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.search-box .input-group {
+    border-radius: 25px;
+    overflow: hidden;
+}
+
+.search-box .form-control {
+    border-radius: 0 25px 25px 0;
+    font-size: 1rem;
+    padding: 12px;
+}
+
+.search-box .input-group-text {
+    border-radius: 25px 0 0 25px;
+    padding: 0 15px;
+}
+
+.price-input {
+    text-align: right;
+}
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    border-color: #86b7fe;
+}
+
+.btn {
+    padding: 8px 20px;
+    border-radius: 5px;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+/* Suggestions styling */
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+    margin-top: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 15px;
+}
+
+.suggestion-info {
+    flex: 1;
+}
+
+.suggestion-name {
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+
+.suggestion-price {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.suggestion-original-price {
+    text-decoration: line-through;
+    color: #6c757d;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+.suggestion-discount {
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+</style>
+
+<script>
+    function clearForm() {
+        document.getElementById('searchForm').reset();
+        document.getElementById('searchForm').submit();
+    }
+
+    // Xử lý định dạng số tiền
+    document.querySelectorAll('.price-input').forEach(function(input) {
+        input.addEventListener('input', function(e) {
+            // Chỉ cho phép nhập số
+            let value = this.value.replace(/[^0-9]/g, '');
+            
+            // Định dạng số với dấu phẩy
+            if (value) {
+                value = parseInt(value).toLocaleString('vi-VN');
+            }
+            
+            this.value = value;
+        });
+
+        // Khi submit form, loại bỏ dấu phẩy
+        input.form.addEventListener('submit', function() {
+            input.value = input.value.replace(/[^0-9]/g, '');
+        });
+    });
+
+    // Xử lý gợi ý tìm kiếm
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const term = this.value.trim();
+        
+        if (term.length < 2) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            fetch(`/Product/GetSearchSuggestions?term=${encodeURIComponent(term)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        suggestionsContainer.innerHTML = data.map(product => `
+                            <a href="/Product/Details/${product.id}" class="text-decoration-none text-dark">
+                                <div class="suggestion-item">
+                                    <img src="${product.imageUrl || '/images/no-image.png'}" alt="${product.name}" class="suggestion-image">
+                                    <div class="suggestion-info">
+                                        <div class="suggestion-name">${product.name}</div>
+                                        <div class="suggestion-price">${product.price.toLocaleString('vi-VN')}đ</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `).join('');
+                        suggestionsContainer.style.display = 'block';
+                    } else {
+                        suggestionsContainer.innerHTML = `
+                            <div class="suggestion-item text-muted">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Không tìm thấy sản phẩm phù hợp
+                            </div>
+                        `;
+                        suggestionsContainer.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    suggestionsContainer.style.display = 'none';
+                });
+        }, 300);
+    });
+
+    // Ẩn gợi ý khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+
+    // Hiện lại gợi ý khi focus vào input nếu có từ khóa
+    searchInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 2) {
+            const event = new Event('input');
+            this.dispatchEvent(event);
+        }
+    });
+</script>

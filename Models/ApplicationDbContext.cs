@@ -14,6 +14,8 @@ namespace Productt.Models
         public DbSet<Category> Categories { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderDetail> OrderDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -114,6 +116,39 @@ namespace Productt.Models
                 entity.HasOne(ci => ci.Product)
                     .WithMany()
                     .HasForeignKey(ci => ci.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(o => o.OrderId);
+
+                entity.Property(o => o.TotalAmount)
+                    .HasColumnType("decimal(18,2)")
+                    .IsRequired();
+
+                entity.HasOne(o => o.User)
+                    .WithMany()
+                    .HasForeignKey(o => o.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<OrderDetail>(entity =>
+            {
+                entity.HasKey(od => od.OrderDetailId);
+
+                entity.Property(od => od.UnitPrice)
+                    .HasColumnType("decimal(18,2)")
+                    .IsRequired();
+
+                entity.HasOne(od => od.Order)
+                    .WithMany(o => o.OrderDetails)
+                    .HasForeignKey(od => od.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(od => od.Product)
+                    .WithMany()
+                    .HasForeignKey(od => od.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }

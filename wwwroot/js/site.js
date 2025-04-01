@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add to Cart Animation
     document.querySelectorAll('.add-to-cart').forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function (e) {
             e.preventDefault();
             const cart = document.querySelector('.cart-btn');
             const productCard = this.closest('.card');

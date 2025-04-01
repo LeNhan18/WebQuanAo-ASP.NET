@@ -47,6 +47,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
 // Đăng ký Repository
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
 
 // Cấu hình Cookie
 builder.Services.ConfigureApplicationCookie(options =>
@@ -61,6 +63,14 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Add memory cache
 builder.Services.AddMemoryCache();
+
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+    logging.AddDebug();
+});
 
 var app = builder.Build();
 
