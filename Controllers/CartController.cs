@@ -35,15 +35,30 @@ namespace Productt.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var cart = await _cartRepository.GetCartAsync(userId);
-
-            if (cart == null || !cart.CartItems.Any())
+            if (!User.Identity.IsAuthenticated)
             {
-                return View(new List<CartItem>());
+                return RedirectToAction("Login", "Account");
             }
 
-            return View(cart.CartItems);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            // Lấy giỏ hàng với đầy đủ thông tin sản phẩm
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                        .ThenInclude(p => p.Category)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+            {
+                cart = new Cart 
+                { 
+                    UserId = userId,
+                    CartItems = new List<CartItem>()
+                };
+            }
+
+            return View(cart);
         }
 
         /// <summary>
@@ -55,35 +70,32 @@ namespace Productt.Controllers
         {
             if (!User.Identity.IsAuthenticated)
             {
-                return RedirectToAction("Login", "Account", new { returnUrl = Request.Path });
+                return RedirectToAction("Login", "Account");
             }
 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
             try
             {
-                if (string.IsNullOrEmpty(size) || string.IsNullOrEmpty(color))
+                var product = await _context.Products.FindAsync(productId);
+                if (product == null)
                 {
-                    TempData["Error"] = "Vui lòng chọn size và màu sắc";
-                    return RedirectToAction("Details", "Product", new { id = productId });
+                    TempData["Error"] = "Sản phẩm không tồn tại";
+                    return RedirectToAction("Index", "Product");
                 }
 
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var cartItem = await _cartRepository.AddItemAsync(userId, productId, quantity, size, color);
-
                 if (cartItem != null)
                 {
                     TempData["Success"] = "Đã thêm sản phẩm vào giỏ hàng";
-                    return RedirectToAction("Index");
                 }
-
-                TempData["Error"] = "Không thể thêm sản phẩm vào giỏ hàng";
-                return RedirectToAction("Details", "Product", new { id = productId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding to cart. ProductId: {ProductId}", productId);
                 TempData["Error"] = "Có lỗi xảy ra khi thêm vào giỏ hàng";
-                return RedirectToAction("Details", "Product", new { id = productId });
             }
+
+            return RedirectToAction(nameof(Index));
         }
 
         /// <summary>
@@ -92,16 +104,8 @@ namespace Productt.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveFromCart(int cartItemId)
         {
-            try
-            {
-                await _cartRepository.RemoveItemAsync(cartItemId);
-                return Ok(new { message = "Xóa sản phẩm khỏi giỏ hàng thành công!" });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] RemoveFromCart - {ex.Message}");
-                return StatusCode(500, new { message = "Có lỗi xảy ra khi xóa sản phẩm." });
-            }
+            await _cartRepository.RemoveItemAsync(cartItemId);
+            return RedirectToAction(nameof(Index));
         }
 
         /// <summary>
@@ -110,21 +114,11 @@ namespace Productt.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateQuantity(int cartItemId, int quantity)
         {
-            try
+            if (quantity > 0)
             {
-                if (quantity <= 0)
-                {
-                    return BadRequest(new { message = "Số lượng phải lớn hơn 0." });
-                }
-
                 await _cartRepository.UpdateItemQuantityAsync(cartItemId, quantity);
-                return Ok(new { message = "Cập nhật số lượng thành công!" });
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] UpdateQuantity - {ex.Message}");
-                return StatusCode(500, new { message = "Có lỗi xảy ra khi cập nhật số lượng." });
-            }
+            return RedirectToAction(nameof(Index));
         }
 
         /// <summary>

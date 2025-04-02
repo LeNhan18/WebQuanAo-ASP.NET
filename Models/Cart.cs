@@ -9,7 +9,6 @@ namespace Productt.Models
     {
         public Cart()
         {
-            UserId = string.Empty;
             CartItems = new List<CartItem>();
         }
 

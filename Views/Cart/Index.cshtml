@@ -1,117 +1,120 @@
-@model IEnumerable<Productt.Models.CartItem>
+@model Cart
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
 
-<div class="cart-page">
-    <div class="container">
-        <div class="cart-header">
-            <h2><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng của bạn</h2>
-            <p>@Model.Sum(i => i.Quantity) sản phẩm trong giỏ hàng</p>
-        </div>
-
-        @if (!Model.Any())
-        {
-            <div class="empty-cart">
-                <div class="empty-cart-icon">
-                    <i class="fas fa-shopping-basket"></i>
-                </div>
-                <h3>Giỏ hàng trống</h3>
-                <p>Hãy thêm sản phẩm vào giỏ hàng của bạn</p>
-                <a asp-controller="Product" asp-action="Index" class="btn btn-primary">
-                    <i class="fas fa-shopping-bag me-2"></i>Tiếp tục mua sắm
-                </a>
-            </div>
-        }
-        else
-        {
-            <div class="cart-content">
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="cart-items">
-                            @foreach (var item in Model)
-                            {
-                                <div class="cart-item">
-                                    <div class="item-image">
-                                        <img src="@item.Product.imageUrl" alt="@item.Product.Name">
-                                    </div>
-                                    <div class="item-details">
-                                        <div class="item-info">
-                                            <h5 class="item-name">@item.Product.Name</h5>
-                                            <p class="item-category">@item.Product.Category?.Name</p>
-                                            <div class="item-attributes">
-                                                <span class="attribute">
-                                                    <i class="fas fa-tshirt me-1"></i>Size: @item.Size
-                                                </span>
-                                                <span class="attribute">
-                                                    <i class="fas fa-palette me-1"></i>Màu: @item.Color
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="item-price">
-                                            <div class="price-info">
-                                                <span class="current-price">@item.Product.Price.ToString("N0") đ</span>
-                                                @if (item.Product.Price2 > item.Product.Price)
-                                                {
-                                                    <span class="original-price">@item.Product.Price2.ToString("N0") đ</span>
-                                                    <span class="discount">
-                                                        -@(((item.Product.Price2 - item.Product.Price) / item.Product.Price2 * 100).ToString("0"))%
-                                                    </span>
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="item-actions">
-                                        <div class="quantity-control">
-                                            <button class="btn-quantity" onclick="updateQuantity(@item.Id, @(item.Quantity - 1))">
-                                                <i class="fas fa-minus"></i>
-                                            </button>
-                                            <span class="quantity">@item.Quantity</span>
-                                            <button class="btn-quantity" onclick="updateQuantity(@item.Id, @(item.Quantity + 1))">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </div>
-                                        <div class="item-total">
-                                            @((item.Product.Price * item.Quantity).ToString("N0")) .000đ
-                                        </div>
-                                        <button class="btn-remove" onclick="removeItem(@item.Id)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="cart-summary">
-                            <h4>Tổng giỏ hàng</h4>
-                            <div class="summary-items">
-                                <div class="summary-item">
-                                    <span>Tổng sản phẩm:</span>
-                                    <span>@Model.Sum(i => i.Quantity)</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Tạm tính:</span>
-                                    <span>@Model.Sum(i => i.Product.Price * i.Quantity).ToString("N0") .000đ</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Phí vận chuyển:</span>
-                                    <span>Miễn phí</span>
-                                </div>
-                            </div>
-                            <div class="summary-total">
-                                <span>Tổng cộng:</span>
-                                <span>@Model.Sum(i => i.Product.Price * i.Quantity).ToString("N0") .000đ</span>
-                            </div>
-                            <button class="btn-checkout">
-                                <i class="fas fa-credit-card me-2"></i>Thanh toán
-                            </button>
-                            <a asp-controller="Product" asp-action="Index" class="btn-continue">
-                                <i class="fas fa-arrow-left me-2"></i>Tiếp tục mua sắm
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
+<div class="container mt-4">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Đã thêm sản phẩm vào giỏ hàng
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+
+    <h2>
+        <i class="fas fa-shopping-cart"></i>
+        Giỏ hàng của bạn
+    </h2>
+
+    @if (Model.CartItems == null || !Model.CartItems.Any())
+    {
+        <div class="alert alert-info">
+            Giỏ hàng trống. <a asp-controller="Product" asp-action="Index">Tiếp tục mua sắm</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                @foreach (var item in Model.CartItems)
+                {
+                    <div class="card mb-3">
+                        <div class="row g-0">
+                            <div class="col-md-3">
+                                @if (!string.IsNullOrEmpty(item.Product?.imageUrl))
+                                {
+                                    <img src="@item.Product.imageUrl" class="img-fluid rounded-start" alt="@item.Product.Name">
+                                }
+                                else
+                                {
+                                    <img src="/images/no-image.png" class="img-fluid rounded-start" alt="No Image">
+                                }
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <h5 class="card-title">@item.Product?.Name</h5>
+                                        <form asp-action="RemoveFromCart" method="post">
+                                            <input type="hidden" name="cartItemId" value="@item.Id" />
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Size: @item.Size | Màu: @item.Color
+                                        </small>
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <form asp-action="UpdateQuantity" method="post" class="d-flex align-items-center">
+                                            <input type="hidden" name="cartItemId" value="@item.Id" />
+                                            <div class="input-group" style="width: 120px;">
+                                                <input type="number" name="quantity" class="form-control" 
+                                                       value="@item.Quantity" min="1" max="100" />
+                                                <button type="submit" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-sync"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                        <div class="price">
+                                            <span class="h5">@((item.Product?.Price * item.Quantity).ToString()) đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Tổng giỏ hàng</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tổng sản phẩm:</span>
+                            <span>@Model.CartItems.Sum(x => x.Quantity)</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tạm tính:</span>
+                            <span>@Model.CartItems.Sum(x => x.Product.Price * x.Quantity).ToString("N0") đ</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Phí vận chuyển:</span>
+                            <span>Miễn phí</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Tổng cộng:</strong>
+                            <strong>@Model.CartItems.Sum(x => x.Product.Price * x.Quantity).ToString("N0") đ</strong>
+                        </div>
+
+                        <form asp-controller="Order" asp-action="CreateOrder" method="post">
+                            <div class="mb-3">
+                                <label class="form-label">Địa chỉ giao hàng:</label>
+                                <textarea name="shippingAddress" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 mb-2">
+                                <i class="fas fa-shopping-cart me-2"></i>Đặt hàng
+                            </button>
+                        </form>
+
+                        <a asp-controller="Product" asp-action="Index" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Tiếp tục mua sắm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 <style>

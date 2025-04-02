@@ -72,6 +72,10 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
+builder.Services.Configure<VNPayConfig>(
+    builder.Configuration.GetSection(VNPayConfig.ConfigName));
+builder.Services.AddScoped<PaymentService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

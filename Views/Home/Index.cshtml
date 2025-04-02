@@ -8,7 +8,7 @@
         {
             <div class="product-card">
                 <div class="product-badge">Sale</div>
-                <div class="product-tumb">
+                <div class="product-tumb" onclick="location.href='/Product/Details/@product.Id'">
                     <img src="@(string.IsNullOrEmpty(product.imageUrl) ? "/images/def" : product.imageUrl)" alt="@product.Name">
                 </div>
                 <div class="product-info">
